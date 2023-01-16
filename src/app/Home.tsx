@@ -16,7 +16,7 @@ const Home = () => {
       )}
       {session && (
         <>
-          <p className="text-zinc-500">Hello {session?.user?.name}</p>
+          <p className="text-zinc-500">Hello {session?.user?.id}</p>
           <button onClick={() => signOut()} style={{ backgroundColor: 'red' }}>
             Logout
           </button>
