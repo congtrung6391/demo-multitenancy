@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =========== ENUM =================
+
+enum AccessLevel {
+  ALUMNI
+  CLASS_MOD
+  GRADE_MOD
+  SCHOOL_ADMIN
+}
+
+enum AccessStatus {
+  PENDING
+  APPROVED
+}
+
+enum AccessMode {
+  FULL_ACCESS
+  READ_ONLY
+}
+
+enum ScopePublicity {
+  PRIVATE
+  CLASS
+  GRADE
+  SCHOOL
+}
+
+// ============== MODEL =======================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model User {
+  id            String       @id @default(cuid())
+  classId       String?      @map("class_id")
+  archived      Boolean      @default(false)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @default(now()) @updatedAt @map("updated_at")
+  name          String?
+  email         String?      @unique
+  emailVerified DateTime?    @map("email_verified")
+  username      String?      @unique
+  password      String?
+  image         String?
+  accounts      Account[]
+  accessLevel   AccessLevel  @default(ALUMNI) @map("access_level")
+  accessStatus  AccessStatus @default(PENDING) @map("access_status")
+  accessMode    AccessMode   @default(FULL_ACCESS) @map("access_mode")
+
+  class       Class?       @relation(fields: [classId], references: [id], onDelete: SetNull)
+  information Information?
+  careers      Career[]
+  @@unique([id, email])
+  @@map("users")
+}
+
+model Grade {
+  id        String   @id @default(cuid())
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  code      String   @unique
+  name      String
+  classes   Class[]
+
+  @@map("grades")
+}
+
+model Class {
+  id          String   @id @default(cuid())
+  gradeId     String   @map("grade_id")
+  archived    Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+  name        String
+  description String?
+  users       User[]
+
+  grade Grade @relation(fields: [gradeId], references: [id])
+
+  @@map("classes")
+}
+
+model Information {
+  id                   String         @id @default(cuid())
+  bio                  String?
+  avatarUrl            String?        @map("avatar_url")
+  coverImageUrl        String?        @map("cover_image_url")
+  userEmail            String?        @map("user_email") // email contact, no related to email user
+  emailPublicity       ScopePublicity @default(PRIVATE) @map("email_publicity")
+  phone                String?
+  phonePublicity       ScopePublicity @default(PRIVATE) @map("phone_publicity")
+  facebookUrl          String?        @map("facebook_url")
+  facebookPublicity    ScopePublicity @default(PRIVATE) @map("facebook_publicity")
+  dateOfBirth          DateTime?      @map("date_of_birth")
+  dateOfBirthPublicity ScopePublicity @default(PRIVATE) @map("date_of_birth_publicity")
+  gradeCode            String?        @map("grade_code")
+  gradeName            String?        @map("grade_name")
+  className            String?        @map("class_name")
+  userId               String         @unique
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("informations")
+}
+
+model Career {
+  id        String   @id @default(cuid())
+  jobTitle  String   @map("job_title")
+  company   String   
+  startDate DateTime @map("start_date")
+  endDate   DateTime @map("end_date")
+  userId    String   @map("user_id")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("careers")
+}
+ 
