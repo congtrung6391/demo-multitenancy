@@ -4,11 +4,8 @@ import { Icon } from '@iconify/react';
 import { DropzoneOptions, useDropzone } from 'react-dropzone';
 import roundAddAPhoto from '@iconify/icons-ic/round-add-a-photo';
 // material
-import { alpha, styled, Theme } from '@mui/material';
+import { alpha, styled, SxProps, Theme } from '@mui/material';
 import { Box, Paper, Typography } from '@mui/material';
-import { SxProps } from '@material-ui/system';
-// utils
-import { fData } from '../../utils/formatNumber';
 
 // ----------------------------------------------------------------------
 
@@ -104,7 +101,7 @@ export default function UploadAvatar({
         return (
           <Box key={path} sx={{ my: 1 }}>
             <Typography variant="subtitle2" noWrap>
-              {path} - {fData(size)}
+              {path} - {size}
             </Typography>
             {errors.map(e => (
               <Typography key={e.code} variant="caption" component="p">
