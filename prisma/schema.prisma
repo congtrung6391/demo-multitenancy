@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
+  output   = "./generated/client"
 }
 
 datasource db {
@@ -10,49 +8,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// =========== ENUM =================
-
-enum AccessLevel {
-  ALUMNI
-  CLASS_MOD
-  GRADE_MOD
-  SCHOOL_ADMIN
-}
-
-enum AccessStatus {
-  PENDING
-  APPROVED
-}
-
-enum AccessMode {
-  FULL_ACCESS
-  READ_ONLY
-}
-
-enum ScopePublicity {
-  PRIVATE
-  CLASS
-  GRADE
-  SCHOOL
-}
-
-// ============== MODEL =======================
-
 model Account {
   id                String  @id @default(cuid())
   userId            String  @map("user_id")
   type              String
   provider          String
   providerAccountId String  @map("provider_account_id")
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -60,25 +29,24 @@ model Account {
 
 model User {
   id            String       @id @default(cuid())
-  classId       String?      @map("class_id")
-  archived      Boolean      @default(false)
-  createdAt     DateTime     @default(now()) @map("created_at")
-  updatedAt     DateTime     @default(now()) @updatedAt @map("updated_at")
   name          String?
   email         String?      @unique
   emailVerified DateTime?    @map("email_verified")
   username      String?      @unique
   password      String?
   image         String?
-  accounts      Account[]
-  accessLevel   AccessLevel  @default(ALUMNI) @map("access_level")
+  archived      Boolean      @default(false)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @default(now()) @updatedAt @map("updated_at")
   accessStatus  AccessStatus @default(PENDING) @map("access_status")
+  accessLevel   AccessLevel  @default(ALUMNI) @map("access_level")
   accessMode    AccessMode   @default(FULL_ACCESS) @map("access_mode")
-
-  class       Class?       @relation(fields: [classId], references: [id], onDelete: SetNull)
-  information Information?
-  careers     Career[]
-  Education   Education[]
+  classId       String?      @map("class_id")
+  accounts      Account[]
+  careers       Career[]
+  Education     Education[]
+  information   Information?
+  class         Class?       @relation(fields: [classId], references: [id])
 
   @@unique([id, email])
   @@map("users")
@@ -104,9 +72,8 @@ model Class {
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
   name        String
   description String?
+  grade       Grade    @relation(fields: [gradeId], references: [id])
   users       User[]
-
-  grade Grade @relation(fields: [gradeId], references: [id])
 
   @@map("classes")
 }
@@ -115,8 +82,6 @@ model Information {
   id                   String         @id @default(cuid())
   bio                  String?
   avatarUrl            String?        @map("avatar_url")
-  coverImageUrl        String?        @map("cover_image_url")
-  userEmail            String?        @map("user_email") // email contact, no related to email user
   emailPublicity       ScopePublicity @default(PRIVATE) @map("email_publicity")
   phone                String?
   phonePublicity       ScopePublicity @default(PRIVATE) @map("phone_publicity")
@@ -124,25 +89,25 @@ model Information {
   facebookPublicity    ScopePublicity @default(PRIVATE) @map("facebook_publicity")
   dateOfBirth          DateTime?      @map("date_of_birth")
   dateOfBirthPublicity ScopePublicity @default(PRIVATE) @map("date_of_birth_publicity")
+  userId               String         @unique
+  className            String?        @map("class_name")
   gradeCode            String?        @map("grade_code")
   gradeName            String?        @map("grade_name")
-  className            String?        @map("class_name")
-  userId               String         @unique
-
-  user User @relation(fields: [userId], references: [id])
+  userEmail            String?        @map("user_email")
+  coverImageUrl        String?        @map("cover_image_url")
+  user                 User           @relation(fields: [userId], references: [id])
 
   @@map("informations")
 }
 
 model Career {
   id        String   @id @default(cuid())
-  jobTitle  String   @map("job_title")
   company   String
-  startDate DateTime @map("start_date")
   endDate   DateTime @map("end_date")
+  jobTitle  String   @map("job_title")
+  startDate DateTime @map("start_date")
   userId    String   @map("user_id")
-
-  user User @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@map("careers")
 }
@@ -152,10 +117,60 @@ model Education {
   degree    String?
   school    String
   startDate DateTime? @map("start_date")
-  endDate   DateTime? @map("end_date") // in case  not graduated
+  endDate   DateTime? @map("end_date")
   userId    String    @map("user_id")
-
-  user User @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
 
   @@map("educations")
+}
+
+model TestTable {
+  id   String @id @default(cuid())
+  name String
+
+  @@map("test_model")
+}
+
+model test_model_2 {
+  id   String @id
+  name String
+}
+
+model test_model_3 {
+  id   String @id
+  name String
+}
+
+model test_model_4 {
+  id   String @id
+  name String
+}
+
+model test_model_5 {
+  id   String @id
+  name String
+}
+
+enum AccessLevel {
+  SCHOOL_ADMIN
+  ALUMNI
+  CLASS_MOD
+  GRADE_MOD
+}
+
+enum AccessStatus {
+  PENDING
+  APPROVED
+}
+
+enum AccessMode {
+  FULL_ACCESS
+  READ_ONLY
+}
+
+enum ScopePublicity {
+  PRIVATE
+  CLASS
+  GRADE
+  SCHOOL
 }

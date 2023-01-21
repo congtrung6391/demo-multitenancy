@@ -1,4 +1,6 @@
-import { prisma } from '@lib/prisma/prisma';
+import getPrismaClient from '@lib/prisma/prisma';
+import prisma from '@lib/prisma/prisma';
+import type { PrismaClient } from '@prisma/client';
 
 import {
   CreateGradeServiceProps,
@@ -7,8 +9,13 @@ import {
 } from '../types';
 
 export default class GradeService {
-  static create = async ({ name, code }: CreateGradeServiceProps) => {
-    const existingGrade = await prisma.grade.findUnique({
+  static create = async (
+    tenant: string,
+    { name, code }: CreateGradeServiceProps,
+  ) => {
+    const prismaRequest = await getPrismaClient(tenant);
+    await prismaRequest.$connect();
+    const existingGrade = await prismaRequest.grade.findUnique({
       where: {
         code: code,
       },
@@ -18,17 +25,25 @@ export default class GradeService {
       throw new Error('existed');
     }
 
-    const newGrade = await prisma.grade.create({
+    const newGrade = await prismaRequest.grade.create({
       data: {
         name: name,
         code: code,
       },
     });
 
+    await prismaRequest.$disconnect();
+
     return newGrade;
   };
 
-  static getPublicList = async ({ params }: GetGradeListServiceProps) => {
+  static getPublicList = async (
+    tenant: string,
+    { params }: GetGradeListServiceProps,
+  ) => {
+    const prismaRequest = await getPrismaClient(tenant);
+    await prismaRequest.$connect();
+
     const { name, code, page, limit } = params;
 
     const whereFilter = {
@@ -39,11 +54,11 @@ export default class GradeService {
       ],
     };
 
-    const [totalGradeItem, gradeItems] = await prisma.$transaction([
-      prisma.grade.count({
+    const [totalGradeItem, gradeItems] = await prismaRequest.$transaction([
+      prismaRequest.grade.count({
         where: whereFilter,
       }),
-      prisma.grade.findMany({
+      prismaRequest.grade.findMany({
         skip: (page - 1) * limit,
         take: limit,
         where: whereFilter,
@@ -52,6 +67,8 @@ export default class GradeService {
         },
       }),
     ]);
+
+    await prismaRequest.$disconnect();
 
     return {
       totalItems: totalGradeItem,

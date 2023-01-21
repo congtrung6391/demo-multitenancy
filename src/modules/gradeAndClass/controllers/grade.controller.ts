@@ -10,7 +10,7 @@ export default class GradeController {
   ) => {
     try {
       const { page, limit, code, name } = req.query;
-      const gradeListData = await GradeService.getPublicList({
+      const gradeListData = await GradeService.getPublicList(req.tenant, {
         params: {
           page: page ? parseInt(page as string, 10) : 1,
           limit: limit ? parseInt(limit as string, 10) : 20,
@@ -37,7 +37,7 @@ export default class GradeController {
   ) => {
     try {
       const { name, code } = req.body;
-      const newGrade = await GradeService.create({ name, code });
+      const newGrade = await GradeService.create(req.tenant, { name, code });
 
       return res.status(201).json({
         status: true,

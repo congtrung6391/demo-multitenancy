@@ -63,7 +63,7 @@ export const nextAuthOptions = {
   pages: {
     signIn: 'sign_in',
   },
-  adapter: PrismaAdapter(prisma),
+  // adapter: PrismaAdapter(prisma),
   callbacks: {
     jwt({ token, user }) {
       if (user) {
